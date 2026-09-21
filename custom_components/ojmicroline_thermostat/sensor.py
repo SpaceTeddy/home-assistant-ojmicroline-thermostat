@@ -151,6 +151,31 @@ SENSOR_TYPES: list[OJMicrolineSensorInfo] = [
     ),
     OJMicrolineSensorInfo(
         SensorEntityDescription(
+            name="Energy Usage Week",
+            icon="mdi:lightning-bolt",
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.MEASUREMENT,
+            key="energy_usage_week",
+        ),
+        # Sum of the rolling 7-day window (today + 6 previous days) the API
+        # returns; not a cumulative meter, so it is not TOTAL_INCREASING.
+        value_getter=lambda thermostat: thermostat.get_week_energy(),
+    ),
+    OJMicrolineSensorInfo(
+        SensorEntityDescription(
+            name="Energy Usage Year",
+            icon="mdi:lightning-bolt",
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.MEASUREMENT,
+            key="energy_usage_year",
+        ),
+        # Sum of the rolling 12-month window the API returns.
+        value_getter=lambda thermostat: thermostat.get_year_energy(),
+    ),
+    OJMicrolineSensorInfo(
+        SensorEntityDescription(
             name="Sensor Mode", icon="mdi:thermometer-lines", key="sensor_mode"
         ),
         formatter=VENDOR_TO_HA_STATE.get,
