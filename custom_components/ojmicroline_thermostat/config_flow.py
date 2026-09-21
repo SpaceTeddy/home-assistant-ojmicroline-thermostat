@@ -77,20 +77,23 @@ class OJMicrolineFlowHandler(ConfigFlow, domain=DOMAIN):  # type: ignore[call-ar
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: ConfigEntry,  # noqa: ARG004
     ) -> OptionsFlow:
         """Get the options flow for this handler.
 
         Args:
         ----
-            config_entry: The ConfigEntry instance.
+            config_entry: The ConfigEntry instance. Home Assistant assigns
+                this to the returned handler's `config_entry` property
+                itself; it must not be set manually (it's read-only as of
+                recent Home Assistant versions).
 
         Returns:
         -------
             The created config flow.
 
         """
-        return OJMicrolineOptionsFlowHandler(config_entry)
+        return OJMicrolineOptionsFlowHandler()
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> Any:
         """Handle a flow initialized by the user.
@@ -210,16 +213,6 @@ class OJMicrolineFlowHandler(ConfigFlow, domain=DOMAIN):  # type: ignore[call-ar
 
 class OJMicrolineOptionsFlowHandler(OptionsFlow):
     """Handle options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow.
-
-        Args:
-        ----
-            config_entry: The ConfigEntry instance.
-
-        """
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
