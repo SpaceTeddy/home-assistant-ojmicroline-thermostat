@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable  # pylint: disable=import-error
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
@@ -33,6 +34,7 @@ if TYPE_CHECKING:
 
     from .coordinator import OJMicrolineDataUpdateCoordinator
 
+_LOGGER = logging.getLogger(__name__)
 
 VENDOR_TO_HA_STATE = {
     SENSOR_FLOOR: MODE_FLOOR,
@@ -76,6 +78,31 @@ def _get_value(
     if value_getter:
         return value_getter(thermostat)
     return getattr(thermostat, desc.key)
+
+
+def _get_value_safe(
+    thermostat: Thermostat,
+    desc: SensorEntityDescription,
+    value_getter: ValueGetterOverride | None,
+) -> tuple[bool, Any]:
+    """Fetch a value like _get_value, but never raise.
+
+    Some library getters can fail on unexpected API data (for example
+    a schedule without active events for the current day). A single
+    failing sensor must not take down the whole sensor platform.
+
+    Returns
+    -------
+        A tuple of (success, value).
+
+    """
+    try:
+        return True, _get_value(thermostat, desc, value_getter)
+    except Exception:  # noqa: BLE001  # pylint: disable=broad-exception-caught
+        _LOGGER.warning(
+            "Could not compute %s for %s", desc.name, thermostat.name, exc_info=True
+        )
+        return False, None
 
 
 def _temp_formatter(temp: Any) -> float:
@@ -244,10 +271,12 @@ async def async_setup_entry(
         for info in SENSOR_TYPES:
             # Different models of thermostat support different sensors;
             # skip creating entities if the value is None.
-            val = _get_value(
+            ok, val = _get_value_safe(
                 coordinator.data[idx], info.entity_description, info.value_getter
             )
-            if val is not None:
+            # A getter that raised is still created; it may recover once
+            # the API returns different data.
+            if not ok or val is not None:
                 entities.append(
                     OJMicrolineSensor(
                         coordinator,
@@ -315,7 +344,9 @@ class OJMicrolineSensor(OJMicrolineEntity, SensorEntity):
 
         """
         thermostat = self.coordinator.data[self.idx]
-        val = _get_value(thermostat, self.entity_description, self.value_getter)
-        if self.formatter is not None:
+        _, val = _get_value_safe(
+            thermostat, self.entity_description, self.value_getter
+        )
+        if val is not None and self.formatter is not None:
             return self.formatter(val)
         return val

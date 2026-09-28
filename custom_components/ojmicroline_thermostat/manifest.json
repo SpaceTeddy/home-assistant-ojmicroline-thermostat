@@ -12,5 +12,5 @@
     "requirements": [
         "ojmicroline-thermostat-energy-patch @ git+https://github.com/SpaceTeddy/python-ojmicroline-thermostat.git@ha-local-test"
     ],
-    "version": "1.5.0"
+    "version": "1.5.1"
 }

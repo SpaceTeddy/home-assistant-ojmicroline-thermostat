@@ -176,15 +176,25 @@ class OJMicrolineThermostat(
         return self.coordinator.data[self.idx].get_current_temperature() / 100
 
     @property
-    def target_temperature(self) -> float:
+    def target_temperature(self) -> float | None:
         """Return target temperature.
 
         Returns
         -------
-            The target temperature in a float format.
+            The target temperature in a float format, or None if it
+            cannot be computed from the current API data.
 
         """
-        return self.coordinator.data[self.idx].get_target_temperature() / 100
+        thermostat = self.coordinator.data[self.idx]
+        try:
+            return thermostat.get_target_temperature() / 100
+        except Exception:  # noqa: BLE001  # pylint: disable=broad-exception-caught
+            _LOGGER.warning(
+                "Could not compute target temperature for %s",
+                thermostat.name,
+                exc_info=True,
+            )
+            return None
 
     @property
     def max_temp(self) -> float:
