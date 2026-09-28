@@ -105,6 +105,23 @@ def _get_value_safe(
         return False, None
 
 
+def _is_supported(thermostat: Thermostat, info: OJMicrolineSensorInfo) -> bool:
+    """Return whether the thermostat model supports the sensor.
+
+    Different models of thermostat support different sensors. When the
+    description key is a raw thermostat field, support is decided by that
+    field, so mode-dependent sensors (e.g. the boost end time) are created
+    even while their mode is inactive. Otherwise the computed value decides.
+    A getter that raised is still created; it may recover once the API
+    returns different data.
+    """
+    desc = info.entity_description
+    if hasattr(thermostat, desc.key):
+        return getattr(thermostat, desc.key) is not None
+    ok, val = _get_value_safe(thermostat, desc, info.value_getter)
+    return not ok or val is not None
+
+
 def _temp_formatter(temp: Any) -> float:
     """Format the temperature."""
     return temp / 100
@@ -269,15 +286,8 @@ async def async_setup_entry(
 
     for idx in coordinator.data.keys():  # noqa: SIM118
         for info in SENSOR_TYPES:
-            # Different models of thermostat support different sensors;
-            # skip creating entities if the value is None.
-            ok, val = _get_value_safe(
-                coordinator.data[idx], info.entity_description, info.value_getter
-            )
-            # A getter that raised is still created; it may recover once
-            # the API returns different data.
-            if not ok or val is not None:
-                entities.append(
+            if _is_supported(coordinator.data[idx], info):
+                entities.append(  # noqa: PERF401
                     OJMicrolineSensor(
                         coordinator,
                         idx,
