@@ -67,7 +67,8 @@
                 "description": "Selecione as opcções padrão quando est+a a alterar a temperatura do termostato",
                 "data": {
                     "use_comfort_mode": "Definna para modo conforto quando está a mudar a temperatura.",
-                    "comfort_mode_duration": "Qual a duração que o modo conforto deve durar."
+                    "comfort_mode_duration": "Qual a duração que o modo conforto deve durar.",
+                    "update_interval": "O intervalo de atualização em segundos (10-3600, padrão 60)."
                 }
             }
         }

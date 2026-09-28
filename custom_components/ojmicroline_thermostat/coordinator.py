@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from ojmicroline_thermostat import OJMicrolineAuthError, OJMicrolineError, Thermostat
 
 from .api import oj_microline_from_config_entry_data
-from .const import API_TIMEOUT, DOMAIN, UPDATE_INTERVAL
+from .const import API_TIMEOUT, CONF_UPDATE_INTERVAL, DOMAIN, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +33,9 @@ class OJMicrolineDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=UPDATE_INTERVAL),
+            update_interval=timedelta(
+                seconds=entry.options.get(CONF_UPDATE_INTERVAL, UPDATE_INTERVAL)
+            ),
         )
         self.api = oj_microline_from_config_entry_data(entry.data, hass)
 

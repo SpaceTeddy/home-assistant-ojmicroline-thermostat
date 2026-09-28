@@ -1,13 +1,23 @@
 """OJMicroline Thermostat platform configuration."""
 
+from datetime import timedelta
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_MODEL, CONFIG_FLOW_VERSION, DOMAIN, MODEL_WD5_SERIES
+from .const import (
+    CONF_MODEL,
+    CONF_UPDATE_INTERVAL,
+    CONFIG_FLOW_VERSION,
+    DOMAIN,
+    MODEL_WD5_SERIES,
+    UPDATE_INTERVAL,
+)
 from .coordinator import OJMicrolineDataUpdateCoordinator
 
 PLATFORMS = [
+    Platform.BUTTON,
     Platform.CLIMATE,
     Platform.SENSOR,
     Platform.BINARY_SENSOR,
@@ -34,8 +44,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    entry.async_on_unload(entry.add_update_listener(async_update_options))
 
     return True
+
+
+async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Apply changed options without reloading the integration.
+
+    Args:
+    ----
+        hass: The HomeAssistant instance.
+        entry: The ConfigEntry containing the updated options.
+
+    """
+    coordinator: OJMicrolineDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator.update_interval = timedelta(
+        seconds=entry.options.get(CONF_UPDATE_INTERVAL, UPDATE_INTERVAL)
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

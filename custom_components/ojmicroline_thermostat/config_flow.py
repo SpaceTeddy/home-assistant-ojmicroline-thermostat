@@ -22,13 +22,17 @@ from .const import (
     CONF_COMFORT_MODE_DURATION,
     CONF_CUSTOMER_ID,
     CONF_MODEL,
+    CONF_UPDATE_INTERVAL,
     CONF_USE_COMFORT_MODE,
     CONFIG_FLOW_VERSION,
     DEFAULT_WG4_APPLICATION,
     DOMAIN,
     INTEGRATION_NAME,
+    MAX_UPDATE_INTERVAL,
+    MIN_UPDATE_INTERVAL,
     MODEL_WD5_SERIES,
     MODEL_WG4_SERIES,
+    UPDATE_INTERVAL,
 )
 
 DATA_SCHEMA = vol.Schema(
@@ -247,6 +251,15 @@ class OJMicrolineOptionsFlowHandler(OptionsFlow):
                             CONF_COMFORT_MODE_DURATION, COMFORT_DURATION
                         ),
                     ): vol.All(vol.Coerce(int), vol.Range(min=1)),
+                    vol.Optional(
+                        CONF_UPDATE_INTERVAL,
+                        default=self.config_entry.options.get(
+                            CONF_UPDATE_INTERVAL, UPDATE_INTERVAL
+                        ),
+                    ): vol.All(
+                        vol.Coerce(int),
+                        vol.Range(min=MIN_UPDATE_INTERVAL, max=MAX_UPDATE_INTERVAL),
+                    ),
                 }
             ),
         )
